@@ -33,10 +33,10 @@ def user_auth(username: str, password: str) -> str | None | uuid.UUID:
 
     if not user:
         return None
-    
-    if str(password_to_hash(password=password) + salt) != database.UserAuth.password:
+
+    if str(password_to_hash(password=password) + salt) != user.password:
         return username
-    
+
     return user
 
 @app.get('/products/{product_id}', response_model=schema.Product)
@@ -54,19 +54,19 @@ async def get_products(page: int, limit: int):
     j = 0
     offset: int = page*limit
     out_list: list[database.Product] = []
-    for product in database.Product.select().limit(limit):
+    for product in database.Product.select().offset(offset).limit(limit):
         if i < offset:
             i+=1
             continue
-        
+
         out_list.append(product)
-    
+
     return out_list
 
 
-@app.post('/user/auth', response_model=schema.User)
+@app.post('/users/auth', response_model=schema.User)
 async def get_user(user: schema.UserAuth):
-    user_auth_status: str | database.UserAuth | None = user_auth(username=user.username, password=user.password)
+    user_auth_status: str | database.UserAuth | None = user_auth(username=user.eusrname, password=user.password)
 
     if not user_auth_status:
         raise HTTPException(status_code=404, detail="Invalid username")
@@ -78,20 +78,29 @@ async def get_user(user: schema.UserAuth):
 
 @app.post('/user/reg')
 async def user_reg(user: schema.UserAuth):
+    """
+    это функция для регистрации нового пользователя
+    TODO: вынести из контроллера
+    """
+
+    # это функция для регистрации нового пользователя
+    # TODO: вынести из контроллера
     user_to_db = database.UserAuth(username=user.username, password=password_to_hash(user.password), tel_number=user.tel_number, email=user.email)
     user_to_db.save()
 
     raise HTTPException(status_code=201, detail='Registration succes')
-    
 
 
 @app.post('/products/{product_id}')
-async def update_or_create(product: schema.User):
+async def update_or_create(product_id: str):
 
-    if not product:
+    # NOTE: фастапи сам проверяет наличие данных
+    if not product_id:
         raise HTTPException(status_code=204, detail='No data')
-    
-    product_to_db: database.Product = product
+
+    product_to_db: database.Product = get_product_from_db(product_id=product_id)
+    # NOTE: wrong type
+    # product_to_db: database.Product = product
     product_to_db.save()
 
     raise HTTPException(status_code=200, detail='Success')
@@ -109,11 +118,11 @@ async def update_order_status(new_order_status: str, order_id: str):
 
 @app.post('/products/{product_id}')
 async def update_order_status(new_product_status: str, product_id: str):
-        product = get_product_from_db(product_id=product_id)
+    product = get_product_from_db(product_id=product_id)
 
-        if not product: 
-            raise HTTPException(status_code=404, detail="Item not found")
-        
-        product.status = schema.ProductStatus[new_product_status]
+    if not product: 
+        raise HTTPException(status_code=404, detail="Item not found")
+    
+    product.status = schema.ProductStatus[new_product_status]
 
-        raise HTTPException(status_code=201, detail='Change succes')
+    raise HTTPException(status_code=201, detail='Change succes')

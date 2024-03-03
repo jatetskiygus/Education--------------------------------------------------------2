@@ -43,7 +43,6 @@ class User(CreateUpdateMixin, BaseModel):
     email = TextField(null=True)
 
 class UserAuth(User, CreateUpdateMixin):
-    
     password = TextField(null=False)
 
     class Meta:
@@ -51,13 +50,13 @@ class UserAuth(User, CreateUpdateMixin):
 
 class ProductCategory(CreateUpdateMixin, BaseModel):
     name = CharField(max_length=50, null=False)
-    
+
     class Meta:
         db_table = 'categories'
     
 
 class Product(CreateUpdateMixin, BaseModel):
-    seller = ForeignKeyField(model = User)
+    seller = ForeignKeyField(model=User)
     category = ForeignKeyField(model=ProductCategory)
     
     name = CharField(max_length = 100, null=False)
