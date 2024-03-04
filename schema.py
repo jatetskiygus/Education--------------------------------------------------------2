@@ -19,7 +19,7 @@ class UserIndetifier(BaseModel):
 
 
 class User(UserIndetifier):
-    tel_number: str # phone_number +7 (999) 999-99-99
+    phone_number: str # phone_number +7 (999) 999-99-99
     email: str
 
 class UserAuth(UserIndetifier):
@@ -33,8 +33,8 @@ class Category(BaseModel):
 
 
 class Product(BaseModel):
-    seller: User.username
-    category: Category.name 
+    seller: UserIndetifier
+    category: Category
     name: str
     status: ProductStatus
     price: int

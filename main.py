@@ -3,7 +3,7 @@ import os
 import uuid
 import schema
 import database
-import hashlib
+from werkzeug.security import generate_password_hash, check_password_hash
 
 app = FastAPI()
 
@@ -24,20 +24,35 @@ def get_user_from_db(user_id: str) -> database.User:
     user: database.User = database.User.get_or_none(id=user_id)
     return user
 
-def password_to_hash(password: str) -> bytes:
-    key = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt, 100000)
-    return key
-
 def user_auth(username: str, password: str) -> str | None | uuid.UUID:
     user: database.UserAuth = database.UserAuth.get_or_none(username=username)
 
     if not user:
         return None
 
-    if str(password_to_hash(password=password) + salt) != user.password:
+    if not check_password_hash(user.password, password):
         return username
 
     return user
+
+def check_username_access(username: str):
+    user: database.UserIndetifier = user.get_or_none(username=username)
+    if not user: 
+        return None
+    return True
+
+def registration_moment(user: schema.UserAuth):
+    if check_username_access:
+        return None
+    
+    user_to_db = database.UserAuth(
+        username=user.username,
+        password=generate_password_hash(user.password, method='pbkdf2', salt_length=16),
+        phone_number=user.phone_number, email=user.email
+        )
+    
+    user_to_db.save()
+    return True
 
 @app.get('/products/{product_id}', response_model=schema.Product)
 async def get_product(product_id) -> schema.Product | HTTPException:
@@ -50,23 +65,15 @@ async def get_product(product_id) -> schema.Product | HTTPException:
 
 @app.get('/products')
 async def get_products(page: int, limit: int):
-    i = 0
-    j = 0
     offset: int = page*limit
-    out_list: list[database.Product] = []
-    for product in database.Product.select().offset(offset).limit(limit):
-        if i < offset:
-            i+=1
-            continue
-
-        out_list.append(product)
-
+    out_list = database.Product.select()
+    out_list = out_list[offset:offset+limit]
     return out_list
 
 
 @app.post('/users/auth', response_model=schema.User)
 async def get_user(user: schema.UserAuth):
-    user_auth_status: str | database.UserAuth | None = user_auth(username=user.eusrname, password=user.password)
+    user_auth_status: str | database.UserAuth | None = user_auth(username=user.username, password=user.password)
 
     if not user_auth_status:
         raise HTTPException(status_code=404, detail="Invalid username")
@@ -78,25 +85,14 @@ async def get_user(user: schema.UserAuth):
 
 @app.post('/user/reg')
 async def user_reg(user: schema.UserAuth):
-    """
-    это функция для регистрации нового пользователя
-    TODO: вынести из контроллера
-    """
-
-    # это функция для регистрации нового пользователя
-    # TODO: вынести из контроллера
-    user_to_db = database.UserAuth(username=user.username, password=password_to_hash(user.password), tel_number=user.tel_number, email=user.email)
-    user_to_db.save()
+    if not registration_moment(user):
+        raise HTTPException(status_code=400, detail='Username is reserved')
 
     raise HTTPException(status_code=201, detail='Registration succes')
 
 
 @app.post('/products/{product_id}')
 async def update_or_create(product_id: str):
-
-    # NOTE: фастапи сам проверяет наличие данных
-    if not product_id:
-        raise HTTPException(status_code=204, detail='No data')
 
     product_to_db: database.Product = get_product_from_db(product_id=product_id)
     # NOTE: wrong type

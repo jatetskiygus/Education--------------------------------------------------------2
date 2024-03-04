@@ -32,21 +32,27 @@ class CreateUpdateMixin:
         self.updated_at = datetime.utcnow()
         return super().save(*args, **kwargs)
 
-class User(CreateUpdateMixin, BaseModel):
-    frst_name = TextField(null=True)
-    last_name = TextField(null=True)
 
-    username = TextField(null=False)
-
-    tel_number = TextField(null=True)
-
-    email = TextField(null=True)
-
-class UserAuth(User, CreateUpdateMixin):
-    password = TextField(null=False)
+class UserIndetifier(CreateUpdateMixin, BaseModel):
+    username: str
 
     class Meta:
         db_table = 'users'
+
+
+class User(UserIndetifier):
+    frst_name = TextField(null=True)
+    last_name = TextField(null=True)
+
+    phone_number = TextField(null=True)
+
+    email = TextField(null=True)
+
+
+class UserAuth(UserIndetifier):
+    password = TextField(null=False)
+
+    
 
 class ProductCategory(CreateUpdateMixin, BaseModel):
     name = CharField(max_length=50, null=False)
