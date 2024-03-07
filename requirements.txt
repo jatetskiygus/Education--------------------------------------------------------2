@@ -3,3 +3,6 @@ peewee-db-evolve==3.7.6
 pip==22.3.1
 python-dotenv==1.0.0
 fastapi == 0.109.2
+uvicorn == 0.27.1
+werkzeug == 3.0.1
+psycopg2==2.9.9

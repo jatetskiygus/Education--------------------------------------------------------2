@@ -1,7 +1,9 @@
 from fastapi import FastAPI, HTTPException
+import uvicorn
+import schema
+
 import os
 import uuid
-import schema
 import database
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -122,3 +124,6 @@ async def update_order_status(new_product_status: str, product_id: str):
     product.status = schema.ProductStatus[new_product_status]
 
     raise HTTPException(status_code=201, detail='Change succes')
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)
