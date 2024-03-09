@@ -66,12 +66,11 @@ async def get_product(product_id) -> schema.Product | HTTPException:
     return product
 
 @app.get('/products')
-async def get_products(page: int, limit: int):
+async def get_products(page: int = 0, limit: int = 30) -> list[schema.Product]: 
     offset: int = page*limit
     out_list = database.Product.select()
     out_list = out_list[offset:offset+limit]
-    return out_list
-
+    return [schema.Product(**product.__dict__['__data__']) for product in out_list]
 
 @app.post('/users/auth', response_model=schema.User)
 async def get_user(user: schema.UserAuth):
@@ -97,8 +96,6 @@ async def user_reg(user: schema.UserAuth):
 async def update_or_create(product_id: str):
 
     product_to_db: database.Product = get_product_from_db(product_id=product_id)
-    # NOTE: wrong type
-    # product_to_db: database.Product = product
     product_to_db.save()
 
     raise HTTPException(status_code=200, detail='Success')
