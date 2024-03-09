@@ -82,7 +82,7 @@ class OrderItem(CreateUpdateMixin, BaseModel):
 
     status = IntegerField(null=False)
 
-    quantity = IntegerField(null=False) | FloatField(null=False)
+    quantity = FloatField(null=False)
 
     class Meta:
         db_table = 'orders'

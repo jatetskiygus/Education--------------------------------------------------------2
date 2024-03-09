@@ -42,7 +42,7 @@ for _ in range(20):
         name=fake.word(),
         status=random.randint(0, 1),
         price=random.randint(10, 100),
-        quantity=random.randint(1, 100)
+        quantity=random.uniform(1.0, 100.0)
     )
     products.append(product)
 
@@ -54,7 +54,7 @@ for _ in range(50):
         customer=customer,
         products=product,
         status=random.randint(1, 4),
-        quantity=random.randint(1, 5),
+        quantity=random.uniform(1.0, 5.0),
         created_at=datetime.utcnow()
     )
 
