@@ -34,7 +34,7 @@ class CreateUpdateMixin:
 
 
 class UserIndetifier(CreateUpdateMixin, BaseModel):
-    username: str
+    username: str = TextField(unique=True, null=True)
 
     class Meta:
         db_table = 'users'
@@ -70,7 +70,7 @@ class Product(CreateUpdateMixin, BaseModel):
 
     price = IntegerField(null=False)
 
-    quantity = IntegerField(null=False) | FloatField(null=False)
+    quantity = FloatField(null=True)
 
     class Meta:
         db_table = 'products'

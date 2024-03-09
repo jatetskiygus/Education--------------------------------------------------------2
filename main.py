@@ -70,7 +70,24 @@ async def get_products(page: int = 0, limit: int = 30) -> list[schema.Product]:
     offset: int = page*limit
     out_list = database.Product.select()
     out_list = out_list[offset:offset+limit]
-    return [schema.Product(**product.__dict__['__data__']) for product in out_list]
+
+    products = [
+        {
+            'seller': {
+                'username': str(product.seller.username),
+            },
+            'category': {
+                'name': product.category.name,
+            },
+            'name': str(product.name),
+            'status': schema.ProductStatus(product.status),
+            'price': int(product.price),
+            'quantity': float(product.quantity if product.quantity else '0.0')
+        }
+        for product in out_list
+    ]
+
+    return products
 
 @app.post('/users/auth', response_model=schema.User)
 async def get_user(user: schema.UserAuth):
