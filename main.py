@@ -26,34 +26,35 @@ def get_user_from_db(user_id: str) -> database.User:
     user: database.User = database.User.get_or_none(id=user_id)
     return user
 
-def user_auth(username: str, password: str) -> str | None | uuid.UUID:
-    user: database.UserAuth = database.UserAuth.get_or_none(username=username)
+def user_auth(username: str, password: str) -> None | str | database.User:
+    user: database.User = database.User.get_or_none(username=username)
 
     if not user:
         return None
 
     if not check_password_hash(user.password, password):
         return username
-
+    
+    user = database.User.get_or_none(username=username)
     return user
 
-def check_username_access(username: str):
-    user: database.UserIndetifier = user.get_or_none(username=username)
+def username_reserved(username: str):
+    user: database.User = database.User.get_or_none(username=username)
     if not user: 
-        return None
+        return False
     return True
 
-def registration_moment(user: schema.UserAuth):
-    if check_username_access:
+def registration_moment(user: schema.UserRegister):
+    if username_reserved(username=user.username):
         return None
     
-    user_to_db = database.UserAuth(
+    database.User.create(
         username=user.username,
         password=generate_password_hash(user.password, method='pbkdf2', salt_length=16),
-        phone_number=user.phone_number, email=user.email
+        phone_number=user.phone_number,
+        email=user.email
         )
     
-    user_to_db.save()
     return True
 
 @app.get('/products/{product_id}', response_model=schema.Product)
@@ -89,20 +90,20 @@ async def get_products(page: int = 0, limit: int = 30) -> list[schema.Product]:
 
     return products
 
-@app.post('/users/auth', response_model=schema.User)
+@app.post('/users/auth')
 async def get_user(user: schema.UserAuth):
-    user_auth_status: str | database.UserAuth | None = user_auth(username=user.username, password=user.password)
+    user_auth_status: str | database.User | None = user_auth(username=user.username, password=user.password)
 
     if not user_auth_status:
         raise HTTPException(status_code=404, detail="Invalid username")
     
     if isinstance(user_auth_status, str):
-        return user.username
+        return {'code':'400', 'detail': 'Invalid password', 'username': user_auth_status}
     
-    return user_auth_status
+    return schema.User.model_validate(user_auth_status, from_attributes=True)
 
 @app.post('/user/reg')
-async def user_reg(user: schema.UserAuth):
+async def user_reg(user: schema.UserRegister):
     if not registration_moment(user):
         raise HTTPException(status_code=400, detail='Username is reserved')
 
@@ -140,4 +141,4 @@ async def update_order_status(new_product_status: str, product_id: str):
     raise HTTPException(status_code=201, detail='Change succes')
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="127.0.0.1", port=8000)

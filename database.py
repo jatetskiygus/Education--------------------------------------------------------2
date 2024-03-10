@@ -33,14 +33,10 @@ class CreateUpdateMixin:
         return super().save(*args, **kwargs)
 
 
-class UserIndetifier(CreateUpdateMixin, BaseModel):
+class User(CreateUpdateMixin, BaseModel):
     username: str = TextField(unique=True, null=True)
+    password = TextField(null=False)
 
-    class Meta:
-        db_table = 'users'
-
-
-class User(UserIndetifier):
     frst_name = TextField(null=True)
     last_name = TextField(null=True)
 
@@ -48,11 +44,9 @@ class User(UserIndetifier):
 
     email = TextField(null=True)
 
+    class Meta:
+        db_table = 'users'
 
-class UserAuth(UserIndetifier):
-    password = TextField(null=False)
-
-    
 
 class ProductCategory(CreateUpdateMixin, BaseModel):
     name = CharField(max_length=50, null=False)
