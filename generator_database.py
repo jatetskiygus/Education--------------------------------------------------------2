@@ -14,16 +14,11 @@ for _ in range(10):
         last_name=fake.last_name(),
         phone_number=fake.phone_number(),
         email=fake.email(),
-        created_at=datetime.utcnow()
+        created_at=datetime.utcnow(),
+        password=fake.password()
     )
     users.append(user)
 
-
-for user in users:
-    database.UserAuth.create(
-        user=user,
-        password=fake.password()
-    )
 
 categories = []
 for _ in range(5):

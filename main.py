@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException 
 import uvicorn
 import schema
 
@@ -18,7 +18,7 @@ def get_product_from_db(product_id: str) -> database.Product:
     product: database.Product = database.Product.get_or_none(id=product_id)
     return product
 
-def get_order_from_db(order_id: str) -> database.Product:
+def get_order_from_db(order_id: str) -> database.OrderItem:
     order: database.Product = database.Product.get_or_none(id=order_id)
     return order
 
@@ -102,23 +102,14 @@ async def get_user(user: schema.UserAuth):
     
     return schema.User.model_validate(user_auth_status, from_attributes=True)
 
-@app.post('/user/reg')
+@app.post('/user/reg', status_code=201)
 async def user_reg(user: schema.UserRegister):
     if not registration_moment(user):
         raise HTTPException(status_code=400, detail='Username is reserved')
 
-    raise HTTPException(status_code=201, detail='Registration succes')
+    return 'Registration succes'
 
-
-@app.post('/products/{product_id}')
-async def update_or_create(product_id: str):
-
-    product_to_db: database.Product = get_product_from_db(product_id=product_id)
-    product_to_db.save()
-
-    raise HTTPException(status_code=200, detail='Success')
-    
-@app.post('/orders/{order_id}')
+@app.post('/orders/{order_id}', status_code=201)
 async def update_order_status(new_order_status: str, order_id: str):
     order = get_order_from_db(orer_id=order_id)
 
@@ -126,19 +117,21 @@ async def update_order_status(new_order_status: str, order_id: str):
         raise HTTPException(status_code=404, detail="Item not found")
     
     order.status = schema.OrderStatus[new_order_status]
+    order.save()
 
-    raise HTTPException(status_code=201, detail='Change succes')
+    return 'Change succes'
 
-@app.post('/products/{product_id}')
-async def update_order_status(new_product_status: str, product_id: str):
+@app.post('/products/{product_id}', status_code=201)
+async def update_product_status(new_product_status: str, product_id: str):
     product = get_product_from_db(product_id=product_id)
 
     if not product: 
         raise HTTPException(status_code=404, detail="Item not found")
     
     product.status = schema.ProductStatus[new_product_status]
+    product.save()
 
-    raise HTTPException(status_code=201, detail='Change succes')
+    return 'Change succes'
 
 if __name__ == "__main__":
     uvicorn.run(app, host="127.0.0.1", port=8000)
